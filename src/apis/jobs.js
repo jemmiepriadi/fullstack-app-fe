@@ -11,5 +11,5 @@ export async function getAllJobs(data){
 }
 
 export async function getJobDetail(id){
-    return Axios.get(JOB_DETAIL_URL(id))
+    return Axios.get(JOB_DETAIL_URL(id), {withCredentials:true})
 }
