@@ -7,6 +7,7 @@ import {displayAlert} from "../../redux/actions/notif";
 import {Formik, Form, Field} from "formik";
 import * as auth from "../../redux/actions/auth";
 import Cookies from "js-cookie";
+import { bindActionCreators } from "redux";
 
 class LoginForm extends React.PureComponent {
     state = {
@@ -65,8 +66,10 @@ class LoginPage extends React.Component {
         })
       }
 
+      componentDidMount(){
+      }
+
     render() {
-        console.log(this.state.loginSuccess)
         if (this.state.loginSuccess){
             // let targetPage = queryString.parse
             return <Redirect to={'/jobsList'}/>
@@ -85,7 +88,6 @@ class LoginPage extends React.Component {
     }
 
     submit = async ({email,password}) => {
-        const {dispatch} = this.props
         let data = {
             email: email,
             password: password  
@@ -103,16 +105,23 @@ class LoginPage extends React.Component {
             const response = cookie != null ? await authApi.getMeByToken(token) :await authApi.me()
             // const response = await authApi.me();
             const user = response?.data?.data;
-            console.log(JSON.stringify(user) + "ini user")
-            dispatch(displayAlert({message:'Login successful',type:'success'}))
-            dispatch(auth.setUser({user}))
+            this.props.displayAlert({message:'Login successful',type:'success'})
+            sessionStorage.setItem('email', user.email)
             let change = await this.handleChange("loginSuccess", true)
             if(change)return <Redirect to={'/jobsList'}/>
         } catch (e) {
-            dispatch(displayAlert({message:e.message,type:'error'}))
+            this.props.displayAlert({message:'Login failed',type:'success'})
         }
     }
 }
 
 
-export default connect()(LoginPage)
+const mapStateToProps = (state) => ({})
+
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({
+        displayAlert: ({ message, type }) => displayAlert({ message, type })
+    }, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(LoginPage)

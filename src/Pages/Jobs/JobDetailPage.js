@@ -4,8 +4,13 @@ import createHistory from 'history/createBrowserHistory';
 import Cookies from "js-cookie";
 import { attemptLogout } from "../../redux/actions/auth";
 import { Link } from "react-router-dom";
+import { Button } from "react-bootstrap";
+import { displayAlert } from "../../redux/actions/notif";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import jwtDecode from "jwt-decode";
 
-export default class JobDetailPage extends React.Component{
+class JobDetailPage extends React.Component{
     constructor(props) {
         super(props);
         this.state = {
@@ -14,30 +19,24 @@ export default class JobDetailPage extends React.Component{
     }
     async componentDidMount(){
         let cookie = Cookies.get('auth_token' )
-        let history = createHistory();
         
         if(cookie){ 
             // await this.handleChange("isLogin", true)
         }else if(cookie == '' || !cookie){
-             history = createHistory();
              window.location.href="/login"
+        }
+        if((jwtDecode(cookie).exp * 1000 )- 60000 <= Date.now()){
+            window.location.href="/logout"
+
         }
         try{
             let id = this.props?.match?.params?.id;
             let promise = await getJobDetail(id).catch(error =>{
-                if (error.response) {
-                    if(error.response.data.message.toString().toLowerCase().includes("the token has expired")){
-                        attemptLogout()
-                        window.location.href="/login"
-                    }
-                  }  else {
-                    console.log('Error', error.message);
-                    return error.message;
-                  }
+                this.props.displayAlert({message: error.response.data.message, type:"error"})
+                window.location.href='/logout'
                   
             });;
             let response = promise.data
-            console.log(response.data)
             this.handleChange('job', response?.data)
         }catch(e){
             console.log(e.message)
@@ -75,7 +74,11 @@ class JobDetailHead extends React.Component{
     }
     render(){
         return(
-<div style={{backgroundColor:"skyblue", backgroundSize:"50%"}}><h1 style={{color:"white"}}>Github Jobs</h1></div>        )
+            <div style={{backgroundColor:"skyblue", backgroundSize:"50%", display:"flow"}}>
+                <h1 style={{color:"white"}}>Github Jobs</h1>
+                <Button style={{float:"right"}} onClick={()=>{window.location.href="/logout"}} >Logout</Button>
+            </div>      
+        )
     }
 }
 
@@ -86,8 +89,6 @@ class JobDetailBody extends React.Component{
         }
     }
     componentDidMount(){
-        let id = this.props?.match?.params?.id;
-        console.log(id)
     }
     render(){
         return(
@@ -112,3 +113,13 @@ class JobDetailBody extends React.Component{
         )
     }
 }
+
+const mapStateToProps = (state) => ({})
+
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({
+        displayAlert: ({ message, type }) => displayAlert({ message, type })
+    }, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(JobDetailPage)

@@ -15,11 +15,13 @@ import {
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import Cookies from 'js-cookie';
+import NotifBar from './constants/NotifBar/NotifBar';
 
 // import { ReactNotifications } from 'react-notifications-component'
 const JobListPage = lazy(() => import("./Pages/Jobs/JobListPage"));
 const JobDetailPage = lazy(() => import("./Pages/Jobs/JobDetailPage"));
 const LoginPage = lazy(() => import("./Pages/Auth/LoginPage"));
+const LogoutPage = lazy(() => import("./Pages/Auth/LogoutPage"));
 
 
 class App extends React.Component {
@@ -33,10 +35,6 @@ class App extends React.Component {
   }
 
   async componentDidMount(){
-    // let cookies = Cookies.get('auth_token');
-    // if(cookies){
-    //   this.handleChange("isLogin", true)
-    // }
   }
   
   async handleChange(fieldname, value){
@@ -50,16 +48,18 @@ class App extends React.Component {
       return (
         <Suspense fallback={<div>Loading... </div>}>
 
-        <Router>
-      {/* <ReactNotifications /> */}
-      {/* <NotifBar /> */}
-          <Switch>
-            <Route path='/login' component={LoginPage} />
-            <Route path='/jobsList' component={JobListPage} />
-            <Route path='/job/details/:id' component={JobDetailPage} />
-          </Switch>
+          <Router>
+            <NotifBar />
+            <Switch>
+              <Route path='/login' component={LoginPage} />
+              <Route path='/jobsList' component={JobListPage} />
+              <Route path='/job/details/:id' component={JobDetailPage} />
 
-        </Router>
+              <Route path='/logout' component={LogoutPage} />
+
+            </Switch>
+
+          </Router>
         </Suspense>
       );
   }
@@ -75,7 +75,6 @@ class App extends React.Component {
 ReactDOM.render(
   <React.StrictMode>
       <Provider store={store}>
-          {/* { <ReactNotifications /> } */}
           <App />
       </Provider> 
     {/* <App/> */}

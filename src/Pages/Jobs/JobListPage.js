@@ -5,9 +5,13 @@ import createHistory from 'history/createBrowserHistory';
 import { Checkbox, Footer, Input } from "rsuite";
 import { Button, Col, Form, ListGroup, Row } from "react-bootstrap";
 import { getAll, getAllJobs } from "../../apis/jobs";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { displayAlert } from "../../redux/actions/notif";
+import jwtDecode from "jwt-decode";
 
 
-export default class JobListPage extends React.Component {
+class JobListPage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -32,28 +36,19 @@ export default class JobListPage extends React.Component {
             let history = createHistory();
              window.location.href="/login"
         }
+        if((jwtDecode(cookie).exp * 1000 )- 60000 <= Date.now()){
+            window.location.href="/logout"
+
+        }
         let data = {
             page: 1,
             size: 9
         }
         try{
             let promise = await getAllJobs(data).catch(error =>{
-                if (error.response) {
-                    if(error.response.message.toLowerCase().contains("expire")){
-                        window.location.href="/login"
-                    }
-
-                    // return error.response
-                    // The request was made and the server responded with a status code
-                    // // that falls out of the range of 2xx
-                    // console.log(error.response.data);
-                    // console.log(error.response.status);
-                    // console.log(error.response.headers);
-                  }  else {
-                    // Something happened in setting up the request that triggered an Error
-                    console.log('Error', error.message);
-                    return error.message;
-                  }
+                this.props.displayAlert({message: error.response.data.message, type:"error"})
+                window.location.href='/logout'
+                
             });
             let response = promise?.data
             await this.handleChange('jobs', response?.data?.data)
@@ -90,7 +85,12 @@ class JobPageTitle extends React.Component {
         }
     }
     render(){
-        return <div style={{backgroundColor:"skyblue", backgroundSize:"50%"}}><h1 style={{color:"white"}}>Github Jobs</h1></div>
+        return (
+        <div style={{backgroundColor:"skyblue", backgroundSize:"50%"}}>
+            <h1 style={{color:"white"}}>Github Jobs</h1>
+            <Button style={{float:"right"}} onClick={()=>{window.location.href="/logout"}} >Logout</Button>
+        </div>
+        )
     }
 }
 
@@ -246,3 +246,13 @@ class JobListFooter extends React.Component{
         )
     }
 }
+
+const mapStateToProps = (state) => ({})
+
+const mapDispatchToProps = (dispatch) => {
+    return bindActionCreators({
+        displayAlert: ({ message, type }) => displayAlert({ message, type })
+    }, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(JobListPage)
